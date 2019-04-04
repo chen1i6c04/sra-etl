@@ -1,16 +1,13 @@
-import os
+from pathlib import Path
 import subprocess
 
 
 class SequenceReadArchive:
     def __init__(self, accession, outdir):
         self.accession = accession
-        self.outdir = os.path.join(outdir, 'SRA')
+        self.outdir = outdir
         self.url = None
-        self.sra_file = os.path.join(self.outdir, self.accession + '.sra')
-        self.fastq_dir = os.path.join(outdir, 'Fastq', self.accession)
-        os.makedirs(self.outdir, exist_ok=True)
-        os.makedirs(self.fastq_dir)
+        self.sra_file = Path(self.outdir, self.accession + '.sra')
 
     def make_url(self):
         url = 'ftp://ftp.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/{}/{}/{}/{}'.format(
@@ -18,11 +15,11 @@ class SequenceReadArchive:
         self.url = url
 
     def download(self):
-        subprocess.call(['wget', self.url, '-O', self.sra_file], stdout=subprocess.DEVNULL)
+        subprocess.call(['wget', self.url, '-O', self.sra_file], stderr=subprocess.DEVNULL)
 
-    def split(self):
-        cmd = ["fastq-dump", self.sra_file, '--gzip', '--outdir', self.fastq_dir, '--split-files']
+    def split(self, fastq_dir):
+        cmd = ["fastq-dump", self.sra_file, '--outdir', fastq_dir, '--split-files', '--gzip']
         subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
     def remove(self):
-        os.remove(self.sra_file)
+        Path.unlink(self.sra_file)

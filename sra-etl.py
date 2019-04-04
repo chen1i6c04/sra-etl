@@ -1,35 +1,26 @@
-import subprocess
-from concurrent.futures import ProcessPoolExecutor
 import click
+from celery import group
+from core import sra_download_and_split, genome_assembly, profile
 
 
 @click.command()
 @click.argument('SRA_List', type=click.Path(exists=True))
-@click.argument('out', type=click.Path(exists=True))
-@click.option('--database', default=False)
-@click.option('--parallel', '-p', is_flag=True, help='Run by multiprocess')
-def main(sra_list, out, database, parallel):
+@click.argument('outdir', type=click.Path(exists=True))
+@click.option('--database', default=None)
+def main(sra_list, outdir, database):
     with open(sra_list, 'r') as file:
         sra_list = file.read()
     sra_list = sra_list.splitlines()
 
-    cmds = []
-    for item in sra_list:
-        if database:
-            cmd = ['python', 'core.py', item, out, '--database', database]
-            cmds.append(cmd)
-        else:
-            cmd = ['python', 'core.py', item, out]
-            cmds.append(cmd)
-
-    if parallel:
-        with ProcessPoolExecutor(4) as executor:
-            executor.map(subprocess.call, cmds)
+    if database is not None:
+        result = group(
+            (sra_download_and_split.s(accession, outdir) | genome_assembly.s() | profile.s(database)) for accession in sra_list
+        )()
     else:
-        for cmd in cmds:
-            subprocess.call(cmd)
+        result = group(
+            (sra_download_and_split.s(accession, outdir) | genome_assembly.s()) for accession in sra_list
+        )()
 
 
 if __name__ == '__main__':
     main()
-

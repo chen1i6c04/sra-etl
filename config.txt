@@ -1,0 +1,4 @@
+[Config]
+profiling = /home/chen1i6c04/Projects/Benga
+backend = redis://
+broker = amqp://guest:guest@127.0.0.1:5672
