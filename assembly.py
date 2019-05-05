@@ -1,42 +1,30 @@
-from pathlib import Path
+from pathlib import Path as os_path
 import shutil
 import subprocess
 
 
 def spades_cmd(reads, out):
-    if len(reads) == 2:
+    if len(reads) is 2:
         cmd = [
-            "spades.py",
-            "-1", reads[0],
-            "-2", reads[1],
-            "-t", "8",
-            "-o", out,
-            "--careful",
+            "spades.py", "-1", reads[0], "-2", reads[1], "-t", "8", "-o", out, "--careful",
         ]
     else:
         cmd = [
-            "spades.py",
-            "-s", reads[0],
-            "-t", "8",
-            "-o", out,
-            "--careful",
+            "spades.py", "-s", reads[0], "-t", "8", "-o", out, "--careful",
         ]
     return cmd
 
 
 class Assembly:
-    def __init__(self, accession, reads_path, outdir):
-        self.accession = accession
-        self.reads = list(Path(reads_path).iterdir())
+    def __init__(self, fastq_dir, outdir):
+        self.reads = list(os_path(fastq_dir).iterdir())
         self.outdir = outdir
-        self.contig_file = Path(outdir, 'contigs.fasta')
+        self.contig_file = os_path(outdir, 'contigs.fasta')
 
     def denovo(self):
         if len(self.reads) > 2:
-            reads = self._clean_barcode()
-            cmd = spades_cmd(reads=reads, out=self.outdir)
-        else:
-            cmd = spades_cmd(reads=self.reads, out=self.outdir)
+            self.reads = self._clean_barcode()
+        cmd = spades_cmd(reads=self.reads, out=self.outdir)
         subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
     def _clean_barcode(self):

@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path as os_path
 import subprocess
 
 
@@ -7,7 +7,7 @@ class SequenceReadArchive:
         self.accession = accession
         self.outdir = outdir
         self.url = None
-        self.sra_file = Path(self.outdir, self.accession + '.sra')
+        self.sra_file = os_path(self.outdir, self.accession + '.sra')
 
     def make_url(self):
         url = 'ftp://ftp.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/{}/{}/{}/{}'.format(
@@ -22,4 +22,4 @@ class SequenceReadArchive:
         subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
     def remove(self):
-        Path.unlink(self.sra_file)
+        os_path.unlink(self.sra_file)

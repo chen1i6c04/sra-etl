@@ -1,3 +1,4 @@
+import os
 import click
 from celery import group
 from core import sra_download_and_split, genome_assembly, profile
@@ -12,13 +13,13 @@ def main(sra_list, outdir, database):
         sra_list = file.read()
     sra_list = sra_list.splitlines()
 
-    if database is not None:
+    if database:
         result = group(
-            (sra_download_and_split.s(accession, outdir) | genome_assembly.s() | profile.s(database)) for accession in sra_list
+            (sra_download_and_split.s(accession, os.path.join(outdir, accession)) | genome_assembly.s() | profile.s(database)) for accession in sra_list
         )()
     else:
         result = group(
-            (sra_download_and_split.s(accession, outdir) | genome_assembly.s()) for accession in sra_list
+            (sra_download_and_split.s(accession, os.path.join(outdir, accession)) | genome_assembly.s()) for accession in sra_list
         )()
 
 
