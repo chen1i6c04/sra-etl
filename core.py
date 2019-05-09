@@ -1,7 +1,7 @@
+import os
 import sys
 import shutil
 import configparser
-from pathlib import Path as os_path
 from celery import Celery
 from assembly import Assembly
 from sra import SequenceReadArchive
@@ -21,7 +21,7 @@ app = Celery(backend=celery_backend, broker=celery_broker)
 
 @app.task
 def sra_download_and_split(accession, outdir):
-    fastq_dir = os_path(outdir, 'fastq')
+    fastq_dir = os.path.join(outdir, 'fastq')
     sra = SequenceReadArchive(accession=accession, outdir=outdir)
     sra.make_url()
     sra.download()
@@ -33,7 +33,7 @@ def sra_download_and_split(accession, outdir):
 @app.task
 def genome_assembly(args):
     fastq_dir, outdir = args
-    contig_dir = os_path(outdir, 'contig')
+    contig_dir = os.path.join(outdir, 'contig')
     assembly = Assembly(fastq_dir=fastq_dir, outdir=outdir)
     assembly.denovo()
     shutil.rmtree(fastq_dir)
@@ -45,8 +45,8 @@ def genome_assembly(args):
 @app.task
 def profile(args, database):
     contig_dir, outdir = args
-    profile_dir = os_path(outdir, 'profile')
-    os_path.mkdir(profile_dir, parents=True, exist_ok=True)
+    profile_dir = os.path.join(outdir, 'profile')
+    os.makedirs(profile_dir, exist_ok=True)
     profiling.profiling(profile_dir, contig_dir, database, threads=1, occr_level=0,
                         enable_adding_new_alleles=True, generate_profiles=True, debug=False)
 

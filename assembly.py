@@ -1,4 +1,4 @@
-from pathlib import Path as os_path
+import os
 import shutil
 import subprocess
 
@@ -17,9 +17,9 @@ def spades_cmd(reads, out):
 
 class Assembly:
     def __init__(self, fastq_dir, outdir):
-        self.reads = list(os_path(fastq_dir).iterdir())
+        self.reads = [os.path.join(fastq_dir, i) for i in os.listdir(fastq_dir)]
         self.outdir = outdir
-        self.contig_file = os_path(outdir, 'contigs.fasta')
+        self.contig_file = os.path.join(outdir, 'contigs.fasta')
 
     def denovo(self):
         if len(self.reads) > 2:
@@ -28,7 +28,7 @@ class Assembly:
         subprocess.call(cmd, stdout=subprocess.DEVNULL)
 
     def _clean_barcode(self):
-        reads_size = {read: read.stat().st_size for read in self.reads}
+        reads_size = {read: os.stat(read).st_size for read in self.reads}
         reads_size_sort = sorted(reads_size, key=lambda x: reads_size[x], reverse=True)
         return reads_size_sort[0:2]
 
